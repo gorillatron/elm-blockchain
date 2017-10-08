@@ -39,7 +39,7 @@ update msg model =
                         )
                         block.data
             in
-                { model | chain = setTransactions model.chain block newtransactions }
+                { model | chain = setData model.chain block newtransactions }
 
 
 type Msg

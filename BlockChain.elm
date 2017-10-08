@@ -1,4 +1,4 @@
-module BlockChain exposing (Block, BlockChain, genesis, add, setTransactions)
+module BlockChain exposing (Block, BlockChain, genesis, add, setData)
 
 import Crypto.Hash exposing (sha256)
 
@@ -32,7 +32,7 @@ genesis data =
 
 
 
--- Add a set of Transactions as a Block to the Blockchain
+-- Add a set of data as a Block to the Blockchain
 
 
 add : BlockChain a -> a -> BlockChain a
@@ -46,32 +46,32 @@ add chain data =
 
 
 
--- Create a block from a sett of transacttions
--- Creates a hash based on the transacations and the hash of the block comming before it
+-- Create a block from a sett of data
+-- Creates a hash based on the data and the hash of the block comming before it
 -- creating a link.
 
 
 createBlock : Hash -> a -> Block a
 createBlock previousHash data =
     let
-        transactionsHash =
+        datahash =
             sha256 <| toString data
 
         hash =
-            sha256 <| toString <| ( previousHash, transactionsHash )
+            sha256 <| toString <| ( previousHash, datahash )
     in
         Block data previousHash hash
 
 
 
--- Sett transactions on a blockchain.
+-- Sett data on a blockchain.
 -- This will recalculate all the hashes of the blocks preceeding it.
 
 
-setTransactions : BlockChain a -> Block a -> a -> BlockChain a
-setTransactions chain block data =
+setData : BlockChain a -> Block a -> a -> BlockChain a
+setData chain block data =
     let
-        mutatedtransactions =
+        mutatedblocks =
             List.map
                 (\candblock ->
                     if candblock == block then
@@ -81,7 +81,7 @@ setTransactions chain block data =
                 )
                 chain
     in
-        reHashAll mutatedtransactions
+        reHashAll mutatedblocks
 
 
 
