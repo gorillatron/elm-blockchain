@@ -1,4 +1,4 @@
-module BlockChain exposing (Block, BlockChain, Transactions, Transaction, genesis, add, setTransactions)
+module BlockChain exposing (Block, BlockChain, genesis, add, setTransactions)
 
 import Crypto.Hash exposing (sha256)
 
@@ -6,30 +6,19 @@ import Crypto.Hash exposing (sha256)
 -- DATA STRUCTURES --
 
 
-type alias Block =
-    { transactions : Transactions
+type alias Block a =
+    { data : a
     , previousHash : Hash
     , hash : Hash
     }
 
 
-type alias BlockChain =
-    List Block
+type alias BlockChain a =
+    List (Block a)
 
 
 type alias Hash =
     String
-
-
-type alias Transactions =
-    List Transaction
-
-
-type alias Transaction =
-    { sender : String
-    , receiver : String
-    , amount : Int
-    }
 
 
 
@@ -37,23 +26,23 @@ type alias Transaction =
 -- Generate a fresh blockchain
 
 
-genesis : Transactions -> BlockChain
-genesis transactions =
-    [ createBlock "GENESIS" transactions ]
+genesis : a -> BlockChain a
+genesis data =
+    [ createBlock "GENESIS" data ]
 
 
 
 -- Add a set of Transactions as a Block to the Blockchain
 
 
-add : BlockChain -> Transactions -> BlockChain
-add chain transactions =
+add : BlockChain a -> a -> BlockChain a
+add chain data =
     case last chain of
         Nothing ->
-            genesis transactions
+            genesis data
 
         Just block ->
-            chain ++ [ createBlock block.hash transactions ]
+            chain ++ [ createBlock block.hash data ]
 
 
 
@@ -62,16 +51,16 @@ add chain transactions =
 -- creating a link.
 
 
-createBlock : Hash -> Transactions -> Block
-createBlock previousHash transactions =
+createBlock : Hash -> a -> Block a
+createBlock previousHash data =
     let
         transactionsHash =
-            sha256 <| toString transactions
+            sha256 <| toString data
 
         hash =
             sha256 <| toString <| ( previousHash, transactionsHash )
     in
-        Block transactions previousHash hash
+        Block data previousHash hash
 
 
 
@@ -79,14 +68,14 @@ createBlock previousHash transactions =
 -- This will recalculate all the hashes of the blocks preceeding it.
 
 
-setTransactions : BlockChain -> Block -> Transactions -> BlockChain
-setTransactions chain block transactions =
+setTransactions : BlockChain a -> Block a -> a -> BlockChain a
+setTransactions chain block data =
     let
         mutatedtransactions =
             List.map
                 (\candblock ->
                     if candblock == block then
-                        { block | transactions = transactions }
+                        { block | data = data }
                     else
                         candblock
                 )
@@ -99,11 +88,11 @@ setTransactions chain block transactions =
 -- We fold through our block chain and rehashing it using the add function
 
 
-reHashAll : BlockChain -> BlockChain
+reHashAll : BlockChain a -> BlockChain a
 reHashAll chain =
     List.foldl
         (\next rest ->
-            add rest next.transactions
+            add rest next.data
         )
         []
         chain
